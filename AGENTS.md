@@ -57,9 +57,10 @@ port 3000 (`adk web` inside the container on 8000) against the sample agents in
   `ADK_ALLOW_REMOTE_AGENT_BUILDER=1` would enable it, at the cost of allowing any
   client that can reach the server to read and write agent files; leave it unset
   unless that trade-off is wanted.
-- Known cosmetic issue, unrelated to this setup: the shipped dev UI bundle
-  requests `prism-dark.css`/`prism-light.css`, which are absent from
-  `src/google/adk/cli/browser`, so the console shows one 404 for code
-  highlighting.
+- The shipped dev UI bundle loads `prism-dark.css`/`prism-light.css` relative to
+  `/dev-ui/` when it sets the editor theme, but the last asset refresh dropped
+  both files from `src/google/adk/cli/browser`, so the browser reported a 404.
+  They are restored there (upstream copies from an earlier asset build); keep
+  them alongside `main-*.js` when refreshing the bundle.
 - Run tests inside the container, e.g.
   `docker compose -f docker-compose.base44.yml exec -T web python -m pytest tests/unittests/evaluation/test_final_response_match_v1.py -q`.
