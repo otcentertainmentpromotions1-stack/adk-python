@@ -1,0 +1,38 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.base44
+    working_dir: /app
+    ports:
+      - "3000:8000"
+    volumes:
+      - .:/app
+      - uv-cache:/root/.cache/uv
+    environment:
+      - BASE44_PREVIEW_MODE
+      - PYTHONUNBUFFERED=1
+      # Preview origin, so the UI's module/API requests pass ADK's origin check.
+      - BASE44_PUBLIC_HOST_SUFFIX
+    command:
+      - sh
+      - -ec
+      - |
+        uv pip install --system -e '.[eval]'
+        exec adk web --host 0.0.0.0 --port 8000 \
+          --allow_origins "https://3000-${BASE44_PUBLIC_HOST_SUFFIX}" \
+          contributing/samples/core
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/', timeout=3)"
+      interval: 15s
+      timeout: 5s
+      start_period: 240s
+      retries: 6
+    restart: on-failure
+
+volumes:
+  uv-cache:

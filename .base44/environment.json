@@ -1,0 +1,12 @@
+{
+  "previewPort": 3000,
+  "healthPath": "/dev-ui/",
+  "startCommand": "docker compose -f docker-compose.base44.yml up -d",
+  "secrets": [
+    {
+      "name": "GOOGLE_API_KEY",
+      "description": "Google AI Studio / Gemini API key. Not needed to boot or to load the dev UI; required before an agent can answer a chat message.",
+      "requiredAtBoot": false
+    }
+  ]
+}
