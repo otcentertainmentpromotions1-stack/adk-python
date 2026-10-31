@@ -1,0 +1,53 @@
+# Base44 development environment for the ADK Python repository.
+#
+# Serves the bundled ADK web UI (`adk web`) straight from the checked-out
+# source: the repo is bind-mounted at /app and the server runs with live
+# reload, so edits show up without rebuilding. The sample agents under
+# contributing/samples/core are the content the UI lists.
+services:
+  adk-web:
+    build:
+      context: .
+      dockerfile: Dockerfile.base44
+    working_dir: /app
+    command:
+      - sh
+      - -ec
+      - >-
+        exec adk web
+        --host 0.0.0.0
+        --port 8000
+        --reload
+        --reload_agents
+        --allow_origins https://3000-${BASE44_PUBLIC_HOST_SUFFIX}
+        /app/contributing/samples/core
+    environment:
+      - PYTHONUNBUFFERED=1
+      # uvicorn/watchdog need polling for bind-mounted source in containers.
+      - WATCHFILES_FORCE_POLLING=true
+      - BASE44_PREVIEW_MODE
+    env_file:
+      # Platform-managed external credentials (e.g. GOOGLE_API_KEY). Absolute
+      # path outside the repo; must stay the LAST env_file so its values win.
+      - /run/base44/app.env
+    ports:
+      - "3000:8000"
+    volumes:
+      - .:/app
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - |
+          import urllib.request
+          urllib.request.urlopen("http://127.0.0.1:8000/list-apps", timeout=5).read()
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: on-failure
+    labels:
+      - base44.project=ADK Web UI
+      - base44.kind=web
+      - base44.port=3000
